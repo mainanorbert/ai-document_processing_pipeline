@@ -8,6 +8,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+miniconda.sh
+
 # Virtual environments
 venv/
 env/
@@ -72,6 +74,22 @@ htmlcov/
 .langchain_cache/
 .cache/
 
-# Local experiment scripts
-scratch.py
-test_*.py
+
+
+myvenv/
+paddle-langchain/          # your Conda env folder (if created inside project root)
+miniconda3/                # full Miniconda install if inside project
+miniconda.sh               # installer script you downloaded
+
+# Conda / environment files (export these instead!)
+environment.yml            # ← do NOT ignore if you want reproducible envs – commit it!
+.conda/
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# Misc for ML/OCR projects
+*.pdf                      # if testing with large PDFs – or keep small samples
+*.jpg
+*.png
