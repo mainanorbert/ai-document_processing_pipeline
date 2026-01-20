@@ -3,23 +3,10 @@ from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_classic.agents import create_tool_calling_agent, AgentExecutor
-import pytesseract
-from langchain.tools import tool
 from PIL import Image
-
-
 from dotenv import load_dotenv
-
+import tools
 load_dotenv()
-
-@tool
-def ocr_read_document(image_path: str) -> str:
-    """Reads an image from the given path and returns extracted text using OCR."""
-    try:
-        text = pytesseract.image_to_string(Image.open(image_path))
-        return text
-    except Exception as e:
-        return f"Error reading image: {e}"
 
 # 2. Set up the Antropic model
 
@@ -27,7 +14,7 @@ llm = ChatAnthropic(
     model="claude-haiku-4-5-20251001",
     temperature=1
 )
-tools = [ocr_read_document]
+tools_list = [tools.ocr_read_document]
 
 # 3. Create the Anthropic-compatible prompt
 prompt = ChatPromptTemplate.from_messages(
@@ -45,16 +32,21 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 # 4. Create a proper tool-calling agent
-agent = create_tool_calling_agent(llm, tools, prompt)
+agent = create_tool_calling_agent(llm, tools_list, prompt)
+
+
 
 # 5. Set up the AgentExecutor to run the tool-enabled loop
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
+agent_executor = AgentExecutor(agent=agent, tools=tools_list, verbose=False)
 
 
-ocr_output = ocr_read_document.run("learn.png")
+ocr_output = tools.ocr_read_document.run("assets/invoice.png")
+
+print("\n" + "─"*35 + " OCR OUTPUT " + "─"*33)
+print(ocr_output[:600] + "..." if len(ocr_output) > 600 else ocr_output)
 
 task = """
-Please process the document at 'learn.png' using ocr
+Please process the document at 'assets/invoice.png' using ocr
 and extract the following information in JSON format:
 - `All items listed 1 - 10`
 """
@@ -64,7 +56,7 @@ response = agent_executor.invoke({"input": task})
 
 # Display results side by side
 print("="*80)
-print(" " * 22 + "HANDWRITTEN WORKSHEET RESULTS")
+print(" " * 22 + "INVOICE PROCESSING RESULTS")
 print("="*80)
 print("\n" + "─"*35 + " OCR OUTPUT " + "─"*33)
 print(ocr_output[:600] + "..." if len(ocr_output) > 600 else ocr_output)
