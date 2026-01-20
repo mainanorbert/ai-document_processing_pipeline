@@ -1,0 +1,7 @@
+pillow
+langchain
+langchain-anthropic
+langchain-classic
+pytesseract
+ipython
+python-dotenv
