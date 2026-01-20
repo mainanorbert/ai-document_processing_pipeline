@@ -51,3 +51,23 @@ agent = create_tool_calling_agent(llm, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
 
 
+ocr_output = ocr_read_document.run("learn.png")
+
+task = """
+Please process the document at 'learn.png' using ocr
+and extract the following information in JSON format:
+- `All items listed 1 - 10`
+"""
+
+# Use .invoke() with a dictionary input for the agent_executor
+response = agent_executor.invoke({"input": task})
+
+# Display results side by side
+print("="*80)
+print(" " * 22 + "HANDWRITTEN WORKSHEET RESULTS")
+print("="*80)
+print("\n" + "─"*35 + " OCR OUTPUT " + "─"*33)
+print(ocr_output[:600] + "..." if len(ocr_output) > 600 else ocr_output)
+print("\n" + "─"*35 + " LLM RESULT " + "─"*33)
+print(response["output"])
+print("="*80)
