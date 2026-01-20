@@ -1,0 +1,77 @@
+# Environment variables
+.env
+.env.*
+*.env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+virtualenv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Jupyter notebooks (if used)
+.ipynb_checkpoints
+
+# OCR related temporary files
+*.png
+*.jpg
+*.jpeg
+*.tiff
+*.bmp
+*.gif
+
+# Model or large data files
+models/
+data/
+datasets/
+
+# Python distribution files
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Test and coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# LangChain / LLM caches (optional)
+.langchain_cache/
+.cache/
+
+# Local experiment scripts
+scratch.py
+test_*.py
