@@ -1,6 +1,3 @@
-Here is a cleaned-up, polished, and properly structured version of your README section. It incorporates the compatibility notes, fixes minor formatting issues, removes redundancy, improves clarity, and integrates the LangChain version pinning in a logical place.
-
-```markdown
 ## Setup & Running the Document Processing Pipeline
 
 This project combines **PaddleOCR** (including PP-OCRv5 and advanced document understanding pipelines) with **LangChain** to perform OCR-based text extraction and subsequent processing (e.g., RAG, structured extraction, agent-based querying).
