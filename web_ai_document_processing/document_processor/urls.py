@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+app_name = "document_processor"  # 👈 THIS IS REQUIRED
 
 urlpatterns = [
     path('upload/', views.index, name='index'),              # Form page at /api/upload/ (assuming include prefix)

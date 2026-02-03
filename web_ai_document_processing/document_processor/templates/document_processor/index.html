@@ -2,64 +2,244 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>AI Document Processor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Processor</title>
+
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; white-space: pre-wrap; }
-        #loading { display: none; color: green; }
-        #error { display: none; color: red; }
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --error: #dc2626;
+            --success: #16a34a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+
+        p.subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+        }
+
+        form {
+            margin-top: 24px;
+            display: grid;
+            gap: 16px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            margin-top: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 16px;
+            font-size: 0.95rem;
+        }
+
+        .loading {
+            color: var(--success);
+        }
+
+        .error {
+            color: var(--error);
+        }
+
+        .results {
+            margin-top: 32px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .result-block {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            background: #fafafa;
+        }
+
+        .result-block h3 {
+            margin-top: 0;
+            font-size: 1rem;
+        }
+
+        pre {
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
     </style>
 </head>
 <body>
-    <h1>Upload Image for LLM Processing</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="document" accept="image/*" required>
-        <button type="submit">Process Image</button>
-    </form>
-    <div id="loading">Processing...</div>
-    <div id="error"></div>
-    <div id="result"></div>
+<div class="container">
+    <div class="card">
+        <h1>📄 AI Document Processor</h1>
+        <p class="subtitle">
+            Upload an image and extract structured information using OCR + LLM.
+        </p>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const loading = document.getElementById('loading');
-            const error = document.getElementById('error');
-            const result = document.getElementById('result');
+        <form id="uploadForm" enctype="multipart/form-data">
+            {% csrf_token %}
 
-            loading.style.display = 'block';
-            error.style.display = 'none';
-            result.innerHTML = '';
+            <div>
+                <label for="document">Document image</label>
+                <input id="document" type="file" name="document" accept="image/*" required>
+            </div>
 
-            fetch("{% url 'process_document' %}", {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                loading.style.display = 'none';
-                if (data.error) {
-                    error.style.display = 'block';
-                    error.innerText = data.error;
-                } else {
-                    // Display OCR and LLM outputs nicely
-                    let output = '<h2>Results:</h2>';
-                    output += '<strong>OCR Output:</strong><pre>' + data.ocr_output + '</pre>';
-                    output += '<strong>LLM Output:</strong><pre>' + data.llm_output + '</pre>';
-                    output += '<strong>Image Path:</strong> ' + data.image_path;
-                    result.innerHTML = output;
+            <div>
+                <label for="prompt">Optional extraction instructions</label>
+                <textarea
+                    id="prompt"
+                    name="prompt"
+                    placeholder="e.g. Extract invoice number, date, vendor name, and total amount"
+                ></textarea>
+            </div>
+
+            <button id="submitBtn" type="submit">
+                Process Document
+            </button>
+        </form>
+
+        <div id="status" class="status"></div>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <footer>
+        Powered by PaddleOCR + LangChain + Claude
+    </footer>
+</div>
+
+<script>
+    const form = document.getElementById("uploadForm");
+    const statusEl = document.getElementById("status");
+    const resultsEl = document.getElementById("results");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+
+        statusEl.textContent = "Processing document…";
+        statusEl.className = "status loading";
+        resultsEl.innerHTML = "";
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(
+                "{% url 'document_processor:process_document' %}",
+                {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    }
                 }
-            })
-            .catch(err => {
-                loading.style.display = 'none';
-                error.style.display = 'block';
-                error.innerText = 'Error: ' + err.message;
-            });
-        });
-    </script>
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || data.error) {
+                throw new Error(data.error || "Request failed");
+            }
+
+            statusEl.textContent = "Processing complete ✔";
+            statusEl.className = "status loading";
+
+            resultsEl.innerHTML = `
+                <div class="result-block">
+                    <h3>🧾 OCR Output</h3>
+                    <pre>${data.ocr_output}</pre>
+                </div>
+                <div class="result-block">
+                    <h3>🤖 LLM Output</h3>
+                    <pre>${data.llm_output}</pre>
+                </div>
+            `;
+        } catch (err) {
+            statusEl.textContent = err.message;
+            statusEl.className = "status error";
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
