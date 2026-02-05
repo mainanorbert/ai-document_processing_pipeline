@@ -159,7 +159,13 @@
 
             <div>
                 <label for="document">Document image</label>
-                <input id="document" type="file" name="document" accept="image/*" required>
+                <input
+                    id="document"
+                    type="file"
+                    name="document"
+                    accept="image/*"
+                    required
+                >
             </div>
 
             <div>
@@ -177,7 +183,6 @@
         </form>
 
         <div id="status" class="status"></div>
-
         <div id="results" class="results"></div>
     </div>
 
@@ -187,6 +192,28 @@
 </div>
 
 <script>
+    function getCookie(name) {
+        let cookieValue = null;
+
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(
+                        cookie.substring(name.length + 1)
+                    );
+                    break;
+                }
+            }
+        }
+
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie("csrftoken");
+
     const form = document.getElementById("uploadForm");
     const statusEl = document.getElementById("status");
     const resultsEl = document.getElementById("results");
@@ -209,7 +236,7 @@
                     method: "POST",
                     body: formData,
                     headers: {
-                        "X-CSRFToken": "{{ csrf_token }}"
+                        "X-CSRFToken": csrftoken
                     }
                 }
             );
