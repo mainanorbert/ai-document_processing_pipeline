@@ -33,7 +33,6 @@ from django.views.decorators.csrf import csrf_exempt
 #     return JsonResponse(result, status=200)
 
 @require_POST
-@csrf_exempt 
 def process_document(request):
     uploaded_file = request.FILES.get("document")
     user_prompt = request.POST.get("prompt", "").strip()   # ← new
