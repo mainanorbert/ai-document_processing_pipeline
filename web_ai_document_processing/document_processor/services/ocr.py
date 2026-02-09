@@ -100,53 +100,48 @@
 #         return f"OCR failed: {str(exc)}"
 
 
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List
+from pathlib import Path
+from threading import Lock
+
 from langchain.tools import tool
 
-
-# Global singleton (lazy initialized)
 _ocr_instance = None
+_ocr_lock = Lock()
 
 
 def _get_ocr():
     """
-    Lazily initialize PaddleOCR only once.
+    Lazily initialize PaddleOCR once per process in a thread-safe way.
     """
     global _ocr_instance
-    if _ocr_instance is None:
-        print("Initializing PaddleOCR (predict-based, stable mode)...")
-        from paddleocr import PaddleOCR  # ✅ lazy import
-        _ocr_instance = PaddleOCR(lang="en")
-        print("PaddleOCR ready.")
+
+    if _ocr_instance is not None:
+        return _ocr_instance
+
+    with _ocr_lock:
+        if _ocr_instance is None:
+            from paddleocr import PaddleOCR
+
+            print("Initializing PaddleOCR (predict-based, stable mode)...")
+            _ocr_instance = PaddleOCR(lang="en")
+            print("PaddleOCR ready.")
+
     return _ocr_instance
 
-# @tool
-# def paddle_ocr_text(image_path: str) -> str:
-#     """
-#     Extract plain OCR text from image.
-#     Returns newline-joined text.
-#     """
-#     try:
-#         ocr = _get_ocr()
-#         result = ocr.predict(image_path)
-
-#         if not result or not result[0]:
-#             return ""
-
-#         page = result[0]
-#         return "\n".join(page.get("rec_texts", []))
-
-#     except Exception as exc:
-#         return f"OCR failed: {exc}"
 
 @tool
 def paddle_ocr_read_document(image_path: str) -> List[Dict[str, Any]]:
     """
-    Extract text with bounding boxes and confidence scores.
+    Extract text with bounding boxes and confidence scores from an image.
     """
     try:
+        image_file = Path(image_path)
+        if not image_file.exists():
+            raise FileNotFoundError(f"Image not found: {image_path}")
+
         ocr = _get_ocr()
-        result = ocr.predict(image_path)
+        result = ocr.predict(str(image_file))
 
         if not result or not result[0]:
             return [{"warning": "No text detected"}]
