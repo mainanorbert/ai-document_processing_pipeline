@@ -3,65 +3,67 @@ from pathlib import Path
 from threading import Lock
 
 from langchain.tools import tool
-from paddlex import create_pipeline
 
-_ocr_pipeline = None
+_ocr_instance = None
 _ocr_lock = Lock()
 
 
-def _get_ocr_pipeline():
+def _get_ocr():
     """
-    Lazily initialize PaddleX OCR pipeline once per process.
+    Lazily initialize PaddleOCR once per process in a thread-safe way.
     """
-    global _ocr_pipeline
+    global _ocr_instance
 
-    if _ocr_pipeline is not None:
-        return _ocr_pipeline
+    if _ocr_instance is not None:
+        return _ocr_instance
 
     with _ocr_lock:
-        if _ocr_pipeline is None:
-            print("Initializing PaddleX OCR pipeline...")
-            _ocr_pipeline = create_pipeline("OCR")
-            print("PaddleX OCR ready.")
+        if _ocr_instance is None:
+            from paddleocr import PaddleOCR
 
-    return _ocr_pipeline
+            print("Initializing PaddleOCR (predict-based, stable mode)...")
+            _ocr_instance = PaddleOCR(lang="en")
+            print("PaddleOCR ready.")
+
+    return _ocr_instance
 
 
 @tool
 def paddle_ocr_read_document(image_path: str) -> List[Dict[str, Any]]:
     """
-    Extract text with bounding boxes and confidence scores using PaddleX OCR.
+    Extract text with bounding boxes and confidence scores from an image.
     """
     try:
         image_file = Path(image_path)
         if not image_file.exists():
             raise FileNotFoundError(f"Image not found: {image_path}")
 
-        pipeline = _get_ocr_pipeline()
-        result = pipeline(str(image_file))
+        ocr = _get_ocr()
+        result = ocr.predict(str(image_file))
 
-        blocks = result.get("result", [])
+        if not result or not result[0]:
+            return [{"warning": "No text detected"}]
+
+        page = result[0]
+        texts = page.get("rec_texts", [])
+        boxes = page.get("dt_polys", [])
+        scores = page.get("rec_scores", [None] * len(texts))
+
         extracted: List[Dict[str, Any]] = []
 
-        for block in blocks:
-            text = block.get("text", "").strip()
-            bbox = block.get("box", [])
+        for text, box, score in zip(texts, boxes, scores):
+            xs = [p[0] for p in box]
+            ys = [p[1] for p in box]
 
-            if not text or not bbox:
-                continue
+            item: Dict[str, Any] = {
+                "text": text,
+                "bbox": [min(xs), min(ys), max(xs), max(ys)],
+            }
 
-            xs = [p[0] for p in bbox]
-            ys = [p[1] for p in bbox]
+            if score is not None:
+                item["confidence"] = round(float(score), 4)
 
-            extracted.append(
-                {
-                    "text": text,
-                    "bbox": [min(xs), min(ys), max(xs), max(ys)],
-                }
-            )
-
-        if not extracted:
-            return [{"warning": "No text detected"}]
+            extracted.append(item)
 
         return extracted
 
