@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
-
+from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -29,8 +29,11 @@ DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
-OCR_ENGINE = "paddle"  # options: paddle | tesseract | api
-OCR_SPACE_API_KEY = "K82115718188957"
+load_dotenv()
+
+OCR_ENGINE = os.getenv("OCR_ENGINE", "paddle")
+OCR_SPACE_API_KEY = os.getenv("OCR_SPACE_API_KEY")
+
 
 
 # Application definition
