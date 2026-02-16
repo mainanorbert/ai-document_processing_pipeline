@@ -29,6 +29,10 @@ DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
+OCR_ENGINE = "paddle"  # options: paddle | tesseract | api
+OCR_SPACE_API_KEY = "K82115718188957"
+
+
 # Application definition
 
 INSTALLED_APPS = [
